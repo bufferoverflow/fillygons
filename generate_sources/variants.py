@@ -60,64 +60,63 @@ def decide_file(decider: Decider):
 
         if reversed_edges:
             polygon_name += '-reversed-{}'.format(''.join('.r'[i] for i in reversed_edges))
+    elif decider.get_boolean():
+        # Rhombi
+        short_diagonal, long_diagonal = decider.get(
+            # Diamond
+            (1, sqrt(3)),
+            # Rhombic Dodecahedron
+            (1, sqrt(2)),
+            # Rhombic Triacontahedron
+            (1, GoldenRatio),
+            # Rhombic Enneacontahedron
+            (1, GoldenRatio ** 2),
+
+            # Spiral Tube n = 4 and m = 1
+            (sqrt(3), sqrt(5)),
+
+            # Polar Zonohedron n = 5
+            (sqrt(7 - sqrt(5)), sqrt(5 + sqrt(5))),
+            (sqrt(5 - sqrt(5)), sqrt(7 + sqrt(5))),
+            # Polar Zonohedron n = 6
+            (1, sqrt(5)),
+        )
+
+        assert short_diagonal < long_diagonal
+
+        acute_angle = 2 * atan(S(short_diagonal) / long_diagonal)
+        degrees_rounded = round(float(deg(acute_angle)))
+        name = 'Rhombus ({})'.format(degrees_rounded)
+        polygon_name = 'rhombus-{}'.format(degrees_rounded)
+
+        angles = [acute_angle, pi - acute_angle, acute_angle]
+    elif decider.get_boolean():
+        # Flat hexagons
+        opposite_angle = decider.get(
+            2 * atan(GoldenRatio),
+            pi / 2,
+            2 * atan(sqrt(2)),
+            2 * atan(1 / GoldenRatio),
+            2 * atan(1 / sqrt(2)))
+
+        other_angle = pi - opposite_angle / 2
+
+        degrees_rounded = round(float(deg(opposite_angle)))
+        name = '6-Gon {}'.format(degrees_rounded)
+        polygon_name = '6-gon-flat-{}'.format(degrees_rounded)
+
+        angles = [
+            other_angle,
+            opposite_angle,
+            other_angle,
+            other_angle,
+            opposite_angle]
     else:
-        if decider.get_boolean():
-            # Rhombi
-            short_diagonal, long_diagonal = decider.get(
-                # Diamond
-                (1, sqrt(3)),
-                # Rhombic Dodecahedron
-                (1, sqrt(2)),
-                # Rhombic Triacontahedron
-                (1, GoldenRatio),
-                # Rhombic Enneacontahedron
-                (1, GoldenRatio ** 2),
+        name, polygon_name, *angles_degree = decider.get(
+            ('Rectangle', 'rectangle', 180, 90, 90, 180, 90),
+            ('Triamond', 'triamond', 60, 120, 120, 60))
 
-                # Spiral Tube n = 4 and m = 1
-                (sqrt(3), sqrt(5)),
-
-                # Polar Zonohedron n = 5
-                (sqrt(7 - sqrt(5)), sqrt(5 + sqrt(5))),
-                (sqrt(5 - sqrt(5)), sqrt(7 + sqrt(5))),
-                # Polar Zonohedron n = 6
-                (1, sqrt(5)),
-            )
-
-            assert short_diagonal < long_diagonal
-
-            acute_angle = 2 * atan(S(short_diagonal) / long_diagonal)
-            degrees_rounded = round(float(deg(acute_angle)))
-            name = 'Rhombus ({})'.format(degrees_rounded)
-            polygon_name = 'rhombus-{}'.format(degrees_rounded)
-
-            angles = [acute_angle, pi - acute_angle, acute_angle]
-        elif decider.get_boolean():
-            # Flat hexagons
-            opposite_angle = decider.get(
-                2 * atan(GoldenRatio),
-                pi / 2,
-                2 * atan(sqrt(2)),
-                2 * atan(1 / GoldenRatio),
-                2 * atan(1 / sqrt(2)))
-
-            other_angle = pi - opposite_angle / 2
-
-            degrees_rounded = round(float(deg(opposite_angle)))
-            name = '6-Gon {}'.format(degrees_rounded)
-            polygon_name = '6-gon-flat-{}'.format(degrees_rounded)
-
-            angles = [
-                other_angle,
-                opposite_angle,
-                other_angle,
-                other_angle,
-                opposite_angle]
-        else:
-            name, polygon_name, *angles_degree = decider.get(
-                ('Rectangle', 'rectangle', 180, 90, 90, 180, 90),
-                ('Triamond', 'triamond', 60, 120, 120, 60))
-
-            angles = [rad(i) for i in angles_degree]
+        angles = [rad(i) for i in angles_degree]
 
     angles.append((len(angles) - 1) * pi - sum(angles))
 
