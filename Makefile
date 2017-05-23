@@ -10,7 +10,7 @@ DXF_FLATNESS := 0.1
 FLAT_SCAD_FILES :=
 
 # Non-file goals.
-.PHONY: all clean generated dxf stl asy pdf
+.PHONY: all clean generated dxf stl asy pdf tests
 
 # Remove targets whose command failed.
 .DELETE_ON_ERROR:
@@ -26,7 +26,7 @@ FLAT_SCAD_FILES :=
 
 # Command to run the Python scripts.
 PYTHON_CMD := PYTHONPATH="support" $(PYTHON)
-INKSCAPE_CMD := INKSCAPE=$(INKSCAPE) DXF_FLATNESS=$(DXF_FLATNESS) $(PYTHON_CMD) -m inkscape  
+INKSCAPE_CMD := INKSCAPE=$(INKSCAPE) DXF_FLATNESS=$(DXF_FLATNESS) $(PYTHON_CMD) -m inkscape
 OPENSCAD_CMD := OPENSCAD=$(OPENSCAD) $(PYTHON_CMD) -m openscad
 ASYMPTOTE_CMD := ASYMPTOTE=$(ASYMPTOTE) $(PYTHON_CMD) -m asymptote
 CURA_CMD := CURA=$(CURA) $(PYTHON_CMD) -m cura
@@ -63,6 +63,12 @@ SVG_ASY_FILES := $(call filter_compiled,.svg,.asy,$(SRC_FILES))
 # PDF files which can be generated from Asymptote files. We exclude SVG_ASY_FILES because they don't contain any drawing primitives and thus won't produce a PDF.
 ASY_PDF_FILES := $(call filter_compiled,.asy,.pdf,$(filter-out $(SVG_ASY_FILES),$(SRC_FILES)))
 
+# Files provided together with test generated test cases to compare with actual results.
+ACTUAL_TEST_PNG_FILES := $(patsubst src/tests/actual/%.stl,src/tests/actual/%.png,$(filter src/tests/actual/%.stl,$(SCAD_STL_FILES)))
+
+# Images rendered from compiled test cases.
+COMPARED_TEST_PNG_FILES := $(patsubst src/tests/actual/%.png,src/tests/compared/%.png,$(ACTUAL_TEST_PNG_FILES))
+
 # Makefiles which are generated while compiling to record dependencies.
 DEPENDENCY_FILES := $(patsubst %,%.d,$(SCAD_STL_FILES) $(SCAD_DXF_FILES) $(ASY_PDF_FILES))
 
@@ -76,7 +82,7 @@ ASY_DEPS := $(filter %.asy,$(SRC_FILES)) $(SVG_ASY_FILES)
 GLOBAL_DEPS := Makefile $(wildcard config.mk settings.mk)
 
 # All existing target files.
-EXISTING_TARGETS := $(filter $(SVG_DXF_FILES) $(SCAD_DXF_FILES) $(SCAD_STL_FILES) $(SVG_ASY_FILES) $(ASY_PDF_FILES) $(STL_GCODE_FILES) $(GENERATED_FILES) $(DEPENDENCY_FILES),$(EXISTING_FILES))
+EXISTING_TARGETS := $(filter $(SVG_DXF_FILES) $(SCAD_DXF_FILES) $(SCAD_STL_FILES) $(SVG_ASY_FILES) $(ASY_PDF_FILES) $(STL_GCODE_FILES) $(GENERATED_FILES) $(DEPENDENCY_FILES) $(ACTUAL_TEST_PNG_FILES) $(COMPARED_TEST_PNG_FILES),$(EXISTING_FILES))
 
 # Goal to build Everything. Also generates files which aren't compiled to anything else. Deined here to make it the default goal.
 all: generated $(SCAD_DXF_FILES) $(SCAD_STL_FILES) $(ASY_PDF_FILES) $(STL_GCODE_FILES)
@@ -93,6 +99,7 @@ stl: $(SCAD_STL_FILES)
 asy: $(SVG_ASY_FILES)
 pdf: $(ASY_PDF_FILES)
 gcode: $(STL_GCODE_FILES)
+tests: $(COMPARED_TEST_PNG_FILES)
 
 # Rule to convert an SVG file to a DXF file.
 $(SVG_DXF_FILES): %.dxf: %.svg $(GLOBAL_DEPS)
@@ -123,6 +130,19 @@ $(STL_GCODE_FILES): %.gcode: %.stl stuff/profile.ini $(GLOBAL_DEPS)
 $(ASY_PDF_FILES): %.pdf: %.asy $(GLOBAL_DEPS) | $(ASY_DEPS)
 	echo [asymptote] $@
 	$(ASYMPTOTE_CMD) $< $@
+
+# Stuff which could change the result of the PNG files generated for testing.
+TESTS_DEPS := $(shell find fillygons/testing -name '*.py' -or -name '*.png')
+
+# Images rendered from compiled STL files.
+$(ACTUAL_TEST_PNG_FILES): src/tests/actual/%.png: src/tests/actual/%.stl $(TESTS_DEPS)
+	echo [render_stl] $@
+	render_stl $< $@
+
+# Images created by combining the rendered and checked-in files for comparison. This rule will only generate an image if the two compared images are different.
+$(COMPARED_TEST_PNG_FILES): src/tests/compared/%.png: src/tests/actual/%.png src/tests/expected/%.png
+	echo [compare_images] $@
+	compare_images $^ $@
 
 GENERATED_FILES_DEPS := $(shell find fillygons/generate_sources -name *.py)
 
