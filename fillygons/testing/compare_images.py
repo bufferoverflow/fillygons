@@ -21,13 +21,18 @@ def main(expected_path, actual_path, output_path):
     expected = Image.open(expected_path).convert('L')
     actual = Image.open(actual_path).convert('L')
 
-    paste_with_transparency(expected, get_overlay('expected'))
-    paste_with_transparency(actual, get_overlay('actual'))
+    # Check if the images are equal.
+    if list(expected.getdata()) == list(actual.getdata()):
+        if os.path.exists(output_path):
+            os.unlink(output_path)
+    else:
+        paste_with_transparency(expected, get_overlay('expected'))
+        paste_with_transparency(actual, get_overlay('actual'))
 
-    output = Image.merge('RGB', [expected, actual, expected])
+        output = Image.merge('RGB', [expected, actual, expected])
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    output.save(output_path, 'PNG')
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        output.save(output_path, 'PNG')
 
 
 def parse_args():
