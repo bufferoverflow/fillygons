@@ -10,6 +10,11 @@ The repository needs a working [OpenScad](http://www.openscad.org/) installation
 
 Also, Python 3.4 or later is necessary.
 
+    $ apt install python3-venv
+    $ python3 -m venv venv
+    $ . venv/bin/activate
+    $ python setup.py develop
+
 
 ## Compiling
 
@@ -22,3 +27,6 @@ Therefore [this repository](https://github.com/Fillygons/fillygons-stl) contains
 
 
 ## Unit tests
+
+
+

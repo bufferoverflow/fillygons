@@ -149,6 +149,7 @@ $(ACTUAL_TEST_PNG_FILES): src/tests/actual/%.png: src/tests/actual/%.stl $(TESTS
 
 # Mark the test files as intermediate as they are only generated when there are differences. Otherwise make would try to re-generate them each time.
 .INTERMEDIATE: $(COMPARED_TEST_PNG_FILES)
+.PRECIOUS: $(COMPARED_TEST_PNG_FILES)
 
 # Images created by combining the rendered and checked-in files for comparison. This rule will only generate an image if the two compared images are different.
 $(COMPARED_TEST_PNG_FILES): src/tests/compared/%.png: src/tests/actual/%.png src/tests/expected/%.png
