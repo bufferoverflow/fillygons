@@ -12,3 +12,4 @@
 *.pyc
 /src/tests/actual/*.png
 /src/tests/compared/*.png
+/src/tests/compared/.*.png.sentinel
