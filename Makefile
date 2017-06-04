@@ -10,7 +10,7 @@ DXF_FLATNESS := 0.1
 FLAT_SCAD_FILES :=
 
 # Non-file goals.
-.PHONY: all clean generated dxf stl asy pdf tests
+.PHONY: all clean generated dxf stl asy pdf gcode tests
 
 # Remove targets whose command failed.
 .DELETE_ON_ERROR:
